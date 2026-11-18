@@ -8,6 +8,7 @@
  *  - API & lainnya: tidak di-cache oleh SW (data risiko harus segar).
  * Mode pengembangan (sw.js?dev=1) tidak memakai cache agar hot reload tidak terganggu.
  *  Halaman yang disimpan dibatasi MAKS_HALAMAN (30) agar memori perangkat tidak penuh.
+ * yaa
  */
 
 const VERSI = "v1";
