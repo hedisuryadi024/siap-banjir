@@ -1,0 +1,66 @@
+﻿=== RINGKASAN K6 ===
+--- halaman risiko ---
+
+
+med        : 0
+p(90)      : 0
+p(95)      : 0
+max        : 0
+avg        : 0
+min        : 0
+thresholds : @{p(95)<2000=False}
+
+
+
+
+--- api risiko ---
+
+
+p(90)      : 0
+p(95)      : 0
+max        : 0
+avg        : 0
+min        : 0
+med        : 0
+thresholds : @{p(95)<2000=False}
+
+
+
+
+--- request gagal ---
+
+
+passes     : 29952
+fails      : 0
+thresholds : @{rate<0.01=True}
+value      : 1
+
+
+
+
+--- checks ---
+
+
+halaman Risiko 200                 : @{name=halaman Risiko 200; path=::halaman Risiko 200; 
+                                     id=155d0bf9b8dbef67f3ebce681170da11; passes=0; fails=14976}
+halaman memuat judul Risiko Banjir : @{id=e798eae69f2d9c0efb69b78f289770c1; passes=0; fails=14976; name=halaman memuat 
+                                     judul Risiko Banjir; path=::halaman memuat judul Risiko Banjir}
+API risiko 200                     : @{name=API risiko 200; path=::API risiko 200; 
+                                     id=9f558fb4cb0762e5f551dfc29a9740d3; passes=0; fails=14976}
+API mengembalikan level            : @{name=API mengembalikan level; path=::API mengembalikan level; 
+                                     id=7a8f84e61439bd2f3c0d3d95d85bd139; passes=0; fails=14976}
+
+
+
+
+=== STATUS PER WILAYAH ===
+33.74.02.1002  halaman=000
+   api= [status 000]
+36.71.01.1001  halaman=000
+   api= [status 000]
+33.75.03.1009  halaman=000
+   api= [status 000]
+51.71.01.1001  halaman=000
+   api= [status 000]
+82.71.01.1001  halaman=000
+   api= [status 000]

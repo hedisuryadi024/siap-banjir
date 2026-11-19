@@ -1,0 +1,253 @@
+Hasil pengujian SiapBanjir di laptop tim (19 November 2026)
+Windows, Node.js 22.17.0, PostgreSQL 17 (Docker), Vitest 3.2.7, Playwright
+  npm test                  187/187 lulus (18 berkas)          2,7 detik
+  npm run test:integration   22/22 lulus (5 berkas)            26,6 detik
+  npm run test:e2e           54/54 lulus (27 skenario x 2)      3,1 menit
+  npm run build             berhasil (termasuk lint & typecheck)
+  k6 (NFR-01, 100 VU, 5m)   lulus: p95 halaman Risiko 1,39 s; p95 API 485 ms; 0% gagal
+
+================================================================
+
+Hasil unit test SiapBanjir
+Tanggal: 19 November 2026 | Commit: d9b866e | Runner: Node.js 22 + runner kompatibel Vitest
+Zona waktu: Asia/Jakarta dan UTC (hasil identik)
+
+tests/unit/asal.test.ts  (8/8 lulus)
+  ✓ asalSama > tanpa Origin (curl/server) -> diizinkan
+  ✓ asalSama > Origin sama dengan host -> diizinkan
+  ✓ asalSama > menolak: situs lain
+  ✓ asalSama > menolak: port berbeda
+  ✓ asalSama > menolak: host menyerupai
+  ✓ asalSama > menolak: Origin null (sandbox)
+  ✓ asalSama > menolak: Origin tidak valid
+  ✓ asalSama > ada Origin tetapi tidak ada Host -> ditolak
+
+tests/unit/cocok-nama.test.ts  (9/9 lulus)
+  ✓ normalisasiNama > huruf kecil, tanpa tanda baca, singkatan diperluas
+  ✓ cocokkanNama (kode sama, dua sumber) > sama setelah normalisasi
+  ✓ cocokkanNama (kode sama, dua sumber) > beda ejaan/typo kecil: Gedok Kulon ↔ Gedog Kulon
+  ✓ cocokkanNama (kode sama, dua sumber) > beda ejaan/typo kecil: Tanjung Jati ↔ Tangjung Jati
+  ✓ cocokkanNama (kode sama, dua sumber) > beda ejaan/typo kecil: Labuan Kananga ↔ Labuhan Kananga
+  ✓ cocokkanNama (kode sama, dua sumber) > beda ejaan/typo kecil: Sinembah Tanjung Muda Hulu ↔ SSinembah Tanjung Muda Hulu
+  ✓ cocokkanNama (kode sama, dua sumber) > beda ejaan/typo kecil: Ammasangan ↔ Amasangan
+  ✓ cocokkanNama (kode sama, dua sumber) > beda spasi dan ejaan lama dianggap ejaan
+  ✓ cocokkanNama (kode sama, dua sumber) > nama yang benar-benar lain → berbeda (koordinat tidak dipakai)
+
+tests/unit/cron-riwayat.test.ts  (14/14 lulus)
+  ✓ otorisasiCron > menerima Bearer secret yang benar
+  ✓ otorisasiCron > menolak: tanpa header
+  ✓ otorisasiCron > menolak: secret salah
+  ✓ otorisasiCron > menolak: tanpa awalan Bearer
+  ✓ otorisasiCron > menolak: skema lain
+  ✓ otorisasiCron > menolak: spasi ekstra
+  ✓ otorisasiCron > menolak semua permintaan jika CRON_SECRET kosong atau terlalu pendek
+  ✓ petakanTerbatas > mempertahankan urutan dan tidak melebihi batas paralel
+  ✓ petakanTerbatas > daftar kosong
+  ✓ riwayat > rentang hari WIB: 23:30 WIB masih hari yang sama, 00:30 WIB hari berikutnya
+  ✓ riwayat > rentang hari mengikuti zona kab/kota (D-060): 16:30 UTC = 00:30 WITA / 01:30 WIT hari berikutnya
+  ✓ riwayat > isi riwayat kab/kota memuat daftar desa, jam deteksi, dan catatan deteksi otomatis
+  ✓ riwayat > jam dan tanggal riwayat memakai zona kab/kota (D-060)
+  ✓ riwayat > desa baru ditambahkan ke daftar; desa yang sudah tercantum tidak digandakan
+
+tests/unit/enkripsi.test.ts  (9/9 lulus)
+  ✓ enkripsiJson / dekripsiJson > round-trip: data kembali persis sama setelah didekripsi
+  ✓ enkripsiJson / dekripsiJson > hasil enkripsi tidak memuat endpoint maupun kunci dalam bentuk terbaca
+  ✓ enkripsiJson / dekripsiJson > IV acak: enkripsi data yang sama menghasilkan keluaran berbeda
+  ✓ enkripsiJson / dekripsiJson > kunci salah -> galat (bukan null)
+  ✓ enkripsiJson / dekripsiJson > data yang diubah terdeteksi (integritas GCM)
+  ✓ enkripsiJson / dekripsiJson > data lama yang masih polos tetap terbaca
+  ✓ enkripsiJson / dekripsiJson > tanpa kunci di non-produksi: data disimpan apa adanya (dev/test)
+  ✓ enkripsiJson / dekripsiJson > tanpa kunci di produksi: menolak (gagal aman)
+  ✓ enkripsiJson / dekripsiJson > panjang kunci salah -> galat
+
+tests/unit/geo.test.ts  (6/6 lulus)
+  ✓ geo > jarak Jakarta–Bandung sekitar 120 km (garis lurus)
+  ✓ geo > jarak titik yang sama = 0
+  ✓ grid 0,1° > titik dibulatkan ke pusat sel terdekat
+  ✓ grid 0,1° > titik berdekatan (< 1 km) di sel yang sama berbagi satu data cuaca
+  ✓ grid 0,1° > -0 dinormalkan dan kunci bisa dibaca balik
+  ✓ grid 0,1° > jarak titik ke pusat selnya paling jauh setengah diagonal sel (±8 km)
+
+tests/unit/hasil-cek.test.ts  (9/9 lulus)
+  ✓ teksHasilCek (D-057) > data baru → jam data baru
+  ✓ teksHasilCek (D-057) > cache < 15 menit → sudah dicek, data terbaru, dan kapan data baru bisa diambil
+  ✓ teksHasilCek (D-057) > jam mengikuti zona wilayah: 01:46 WIB = 03:46 WIT (D-060)
+  ✓ teksHasilCek (D-057) > data cadangan / hemat kuota → tanpa janji jam berikutnya (dijelaskan StatusData)
+  ✓ teksHasilCek (D-057) > jam cek = jam data → versi singkat dengan jam berikutnya (WIT)
+  ✓ teksHasilCek (D-057) > menit yang sama di zona lain: WIB dan WITA
+  ✓ teksHasilCek (D-057) > menit yang sama, data cadangan → tanpa jam berikutnya
+  ✓ teksHasilCek (D-057) > beda satu menit → versi lengkap
+  ✓ teksHasilCek (D-057) > setiap jam di semua versi diikuti zona
+
+tests/unit/kode-wilayah.test.ts  (9/9 lulus)
+  ✓ kode wilayah Kemendagri > validasi format bertitik
+  ✓ kode wilayah Kemendagri > level, induk, leluhur, kab/kota
+  ✓ kode wilayah Kemendagri > jenis: kabupaten 01–69, kota 71–99, kelurahan 1xxx, desa 2xxx/3xxx
+  ✓ pencocokan nama antar-sumber > normalisasi singkatan, huruf, tanda baca
+  ✓ pencocokan nama antar-sumber > Kabupaten Aceh Selatan ↔ Kab. Aceh Selatan = sama
+  ✓ pencocokan nama antar-sumber > Suka Maju ↔ Sukamaju = ejaan
+  ✓ pencocokan nama antar-sumber > Tjilatjap ↔ Cilacap = ejaan
+  ✓ pencocokan nama antar-sumber > Karang Mulya ↔ Karangmulia = ejaan
+  ✓ pencocokan nama antar-sumber > Sukarasa ↔ Babakan = berbeda
+
+tests/unit/kontak-darurat.test.ts  (7/7 lulus)
+  ✓ data layanan 112 > mencatat sumber dan tanggal pengambilan
+  ✓ data layanan 112 > setiap entri kab/kota Kemendagri yang valid, tanpa duplikat
+  ✓ data layanan 112 > tanggal launching hanya ada (dan wajib ada) untuk status Sudah Launching
+  ✓ statusLayanan112 > kab/kota yang sudah launching
+  ✓ statusLayanan112 > kab/kota dengan status lain tidak dianggap tersedia
+  ✓ statusLayanan112 > kab/kota yang tidak ada di portal
+  ✓ KONTAK_BPBD > setiap nomor bersumber halaman resmi *.go.id dan punya tanggal pemeriksaan
+
+tests/unit/mesin-risiko.test.ts  (15/15 lulus)
+  ✓ state machine risiko > awal tanpa data: Pemantauan sambil memuat
+  ✓ state machine risiko > EvaluasiRisiko: risiko < ambang → kembali ke Pemantauan
+  ✓ state machine risiko > EvaluasiRisiko: risiko ≥ ambang → Bahaya dengan dua jalur di status awal
+  ✓ state machine risiko > jalur paralel berjalan urut; join ke Detail Penanganan hanya setelah keduanya selesai
+  ✓ state machine risiko > urutan jalur boleh terbalik (grafik selesai lebih dulu)
+  ✓ state machine risiko > event di luar urutan diabaikan (misal PUSH_SELESAI sebelum PUSH_DIPICU)
+  ✓ state machine risiko > Detail Penanganan: pindah antara Checklist Siaga dan Detail Mitigasi
+  ✓ state machine risiko > Final: kondisi normal kembali saat refresh menemukan risiko rendah
+  ✓ state machine risiko > Final: pengguna menutup peringatan; level sama tidak memunculkan bahaya lagi, level naik memunculkan lagi
+  ✓ state machine risiko > level naik Sedang → Tinggi saat di Detail Penanganan memulai episode Bahaya baru
+  ✓ state machine risiko > level sama saat refresh: tetap di state saat ini, data diperbarui
+  ✓ state machine risiko > deep link notifikasi (BUKA_PENANGANAN) langsung ke Detail Penanganan
+  ✓ state machine risiko > deep link saat risiko sudah rendah: tetap Pemantauan
+  ✓ state machine risiko > ganti wilayah memulai evaluasi dari awal dan melupakan peringatan yang ditutup
+  ✓ state machine risiko > gagal memuat: data lama tetap, galat dicatat
+
+tests/unit/notifikasi.test.ts  (26/26 lulus)
+  ✓ anti-spam perluKirim > kirim jika belum ada notifikasi dalam 6 jam
+  ✓ anti-spam perluKirim > tidak kirim ulang level yang sama
+  ✓ anti-spam perluKirim > kirim jika level naik Sedang → Tinggi
+  ✓ anti-spam perluKirim > tidak kirim jika level turun (sudah dapat Tinggi, kini Sedang)
+  ✓ anti-spam perluKirim > RENDAH tidak pernah dikirim
+  ✓ memenuhiLevelMinimum > minimum SEDANG menerima Sedang & Tinggi
+  ✓ memenuhiLevelMinimum > minimum TINGGI hanya menerima Tinggi
+  ✓ buatNotifikasi > pesan memuat jam penilaian dalam zona wilayah: WIB, WITA, WIT (D-060)
+  ✓ buatNotifikasi > berisi deep link ke /risiko?wilayah={id} bagian Detail Penanganan
+  ✓ buatNotifikasi > risiko simulasi: judul diawali [SIMULASI], isi menjelaskan simulasi, tag terpisah dari peringatan asli
+  ✓ validasi endpoint push (anti-SSRF) > mengizinkan https://fcm.googleapis.com/fcm/send/abc123
+  ✓ validasi endpoint push (anti-SSRF) > mengizinkan https://updates.push.services.mozilla.com/wpush/v2/abc
+  ✓ validasi endpoint push (anti-SSRF) > mengizinkan https://web.push.apple.com/QGx
+  ✓ validasi endpoint push (anti-SSRF) > mengizinkan https://wns2-sg2p.notify.windows.com/w/?token=abc
+  ✓ validasi endpoint push (anti-SSRF) > menolak http://fcm.googleapis.com/fcm/send/abc
+  ✓ validasi endpoint push (anti-SSRF) > menolak https://localhost/push
+  ✓ validasi endpoint push (anti-SSRF) > menolak https://127.0.0.1/push
+  ✓ validasi endpoint push (anti-SSRF) > menolak https://169.254.169.254/latest/meta-data
+  ✓ validasi endpoint push (anti-SSRF) > menolak https://fcm.googleapis.com.evil.com/x
+  ✓ validasi endpoint push (anti-SSRF) > menolak https://evilnotify.windows.com.attacker.io/x
+  ✓ validasi endpoint push (anti-SSRF) > menolak https://fcm.googleapis.com:8443/x
+  ✓ validasi endpoint push (anti-SSRF) > menolak bukan url
+  ✓ validasi endpoint push (anti-SSRF) > body subscribe valid lolos; levelMinimum RENDAH ditolak
+  ✓ rate limit > menolak setelah melewati batas lalu reset setelah jendela berakhir
+  ✓ deteksi perangkat > mengenali jenis & browser
+  ✓ base64UrlKeUint8Array > mengonversi VAPID public key (65 byte, diawali 0x04)
+
+tests/unit/parameter-cuaca.test.ts  (5/5 lulus)
+  ✓ parseWaktuLokal > mengonversi waktu WIB ke UTC
+  ✓ hitungParameterCuaca > menghitung jendela 24 jam lalu & 24 jam ke depan dari jam sekarang
+  ✓ hitungParameterCuaca > jendela 24 jam lalu mencakup jam sekarang, bukan jam berikutnya
+  ✓ hitungParameterCuaca > hujan_1jam memakai current.precipitation jika lebih besar
+  ✓ hitungParameterCuaca > parameter tanpa data (semua null) dihilangkan, bukan dianggap 0
+
+tests/unit/risk.service.test.ts  (15/15 lulus)
+  ✓ hitungLevelRisiko > semua parameter rendah → RENDAH, skor ≤ 33
+  ✓ hitungLevelRisiko > satu parameter tinggi → TINGGI, dan hanya parameter itu yang jadi pemicu
+  ✓ hitungLevelRisiko > level akhir = level tertinggi (sedang + rendah → SEDANG)
+  ✓ hitungLevelRisiko > nilai tepat di batas ambang masuk ke level atas (min ≤ nilai < maks)
+  ✓ hitungLevelRisiko > ambang khusus wilayah menimpa ambang global untuk parameter yang sama
+  ✓ hitungLevelRisiko > data kosong → RENDAH, skor 0, adaData false
+  ✓ hitungLevelRisiko > tanpa ambang sama sekali → dianggap tidak ada data
+  ✓ hitungLevelRisiko > parameter tanpa ambang (peluang_hujan_max) diabaikan
+  ✓ hitungLevelRisiko > skor tidak melebihi 100 untuk nilai ekstrem
+  ✓ terapkanSimulasi (ambang tidak diubah) > hujan simulasi 60 mm melewati ambang TINGGI global (≥ 50 mm)
+  ✓ terapkanSimulasi (ambang tidak diubah) > hanya menaikkan: hujan asli yang lebih besar tetap dipakai; parameter lain tidak diubah
+  ✓ terapkanSimulasi (ambang tidak diubah) > nilai di bawah ambang TINGGI tidak menjadi TINGGI
+  ✓ pewarisan ambang bertingkat (desa > kecamatan > kab/kota > provinsi > global) > ambang kab/kota berlaku untuk desa di bawahnya
+  ✓ pewarisan ambang bertingkat (desa > kecamatan > kab/kota > provinsi > global) > ambang tingkat lebih spesifik menimpa leluhurnya, tanpa dicampur
+  ✓ pewarisan ambang bertingkat (desa > kecamatan > kab/kota > provinsi > global) > parameter tanpa ambang khusus di tingkat mana pun memakai ambang global
+
+tests/unit/seed-data.test.ts  (19/19 lulus)
+  ✓ data wilayah Kemendagri (prisma/data/wilayah.tsv.gz) > jumlah per tingkat sesuai Kepmendagri 300.2.2-2430/2025
+  ✓ data wilayah Kemendagri (prisma/data/wilayah.tsv.gz) > kode unik, format valid, dan setiap wilayah punya induk
+  ✓ data wilayah Kemendagri (prisma/data/wilayah.tsv.gz) > semua baris valid dan koordinat berada di wilayah Indonesia
+  ✓ seed profil wilayah > kode ada di data Kemendagri dan namanya cocok
+  ✓ seed profil wilayah > kode unik
+  ✓ seed ambang risiko > semua ambang valid
+  ✓ seed ambang risiko > rentang per parameter bersambung dari 0 sampai tak hingga tanpa celah/tumpang tindih
+  ✓ seed konten > persiapan & rekomendasi global tersedia untuk setiap level
+  ✓ seed konten > semua konten valid dan hanya merujuk kode wilayah yang ada
+  ✓ seed konten > ada informasi UMUM dan RIWAYAT_KEJADIAN
+  ✓ seed konten > setiap riwayat kejadian punya nama sumber dan tautan https yang unik
+  ✓ seed konten > sumber riwayat seed adalah situs resmi pemerintah (BNPB/BMKG diutamakan)
+  ✓ seed konten > riwayat: tanggal kejadian dari sumber kedua dan 'Data per' tidak dipakai bersamaan (D-059)
+  ✓ seed konten > sumberUrl selain https ditolak validator
+  ✓ seed Detail Mitigasi (Buku Saku BNPB, D-044) > setiap rekomendasi global merujuk Buku Saku BNPB beserta halamannya
+  ✓ seed Detail Mitigasi (Buku Saku BNPB, D-044) > #page menunjuk halaman PDF = halaman cetak + 2
+  ✓ seed Detail Mitigasi (Buku Saku BNPB, D-044) > bagian 'Jika banjir terjadi' hanya ada di level TINGGI
+  ✓ seed Detail Mitigasi (Buku Saku BNPB, D-044) > validator menolak JIKA_BANJIR di luar level TINGGI dan sumber non-https
+  ✓ seed Detail Mitigasi (Buku Saku BNPB, D-044) > panduan pascabencana tersedia di Informasi dengan sumber BNPB
+
+tests/unit/seri-cuaca.test.ts  (7/7 lulus)
+  ✓ seri-cuaca > 48 jam: 24 titik lalu (termasuk jam sekarang) + 24 titik prakiraan
+  ✓ seri-cuaca > prakiraan per jam dimulai dari jam sekarang
+  ✓ seri-cuaca > ringkasan harian mulai hari ini, dengan suhu min/maks dari data per jam
+  ✓ seri-cuaca > per jam per hari: mulai hari ini, 24 jam per tanggal, jam yang sudah lewat bertanda lalu
+  ✓ seri-cuaca > WIT: jam digeser +2, 'sekarang' 15:00 WIT, hari lokal lengkap 24 jam
+  ✓ seri-cuaca > WITA: ringkasan harian dari data per jam hari lokal (daily Open-Meteo mengikuti hari WIB)
+  ✓ seri-cuaca > hari lokal yang datanya tidak lengkap tidak ditampilkan
+
+tests/unit/sql-tuples.test.ts  (4/4 lulus)
+  ✓ parser tuple SQL > membaca kode & nama, termasuk escape kutip
+  ✓ parser tuple SQL > angka, NULL, dan kolom polygon dilewati dengan maksKolom
+  ✓ parser tuple SQL > tahan terhadap potongan stream yang memotong di tengah string/escape
+  ✓ parser tuple SQL > mengabaikan tanda kurung di luar VALUES (DDL)
+
+tests/unit/tanggal-informasi.test.ts  (4/4 lulus)
+  ✓ tanggal riwayat di zona lokasi kejadian, dekat tengah malam > Kota Ternate (WIT): 25 Sep 15:30 UTC = 26 Sep 00:30 WIT, walau di WIB masih 25 Sep 22:30
+  ✓ tanggal riwayat di zona lokasi kejadian, dekat tengah malam > Kota Denpasar (WITA): 16:30 UTC = 26 Sep 00:30 WITA
+  ✓ tanggal riwayat di zona lokasi kejadian, dekat tengah malam > Kota Semarang (WIB): 16:59 UTC = 25 Sep 23:59 WIB, meski di WITA/WIT sudah 26 Sep
+  ✓ tanggal riwayat di zona lokasi kejadian, dekat tengah malam > tanggal seed (tanpa jam) tetap tanggal yang sama di zona mana pun: Sitaro 5 Januari 2026
+
+tests/unit/wilayah.test.ts  (16/16 lulus)
+  ✓ nama wilayah > namaTampilan: jenis + desa/kelurahan, kab/kota
+  ✓ nama wilayah > namaInduk: kecamatan → kab/kota → provinsi
+  ✓ tokenPencarian > huruf kecil, pisah tanda baca, buang token < 2 huruf, maks 5 kata
+  ✓ kontakDaruratWilayah > nomor nasional + BPBD kab/kota dan provinsi; tanpa sumber resmi → nomor belum tersedia
+  ✓ kontakDaruratWilayah > 112 diberi keterangan status layanan kab/kota beserta sumbernya
+  ✓ kontakDaruratWilayah > kota administrasi DKI Jakarta hanya memakai BPBD Provinsi
+  ✓ kontakDaruratWilayah > BPBD Provinsi DIY memakai nomor terverifikasi beserta sumber dan tanggal pemeriksaan
+  ✓ nomorDaruratWilayah (D-050, D-051) > 112 sudah diluncurkan → 112 utama, lalu BPBD dan nomor nasional (115 lebih dulu); tanpa pendamping
+  ✓ nomorDaruratWilayah (D-050, D-051) > 112 belum diluncurkan + BPBD bernomor → BPBD utama; 112 tetap di daftar, keterangannya jadi catatan
+  ✓ nomorDaruratWilayah (D-050, D-051) > 112 belum diluncurkan tanpa BPBD bernomor → 112 utama didampingi semua nomor nasional di atas
+  ✓ nomorDaruratWilayah (D-050, D-051) > tanpa wilayah → hanya nomor nasional, 112 utama
+  ✓ nomorDaruratWilayah (D-050, D-051) > isi butir Checklist Siaga 'Catat nomor darurat' (D-051) > 112 sudah diluncurkan atau tanpa wilayah → teks asli
+  ✓ nomorDaruratWilayah (D-050, D-051) > isi butir Checklist Siaga 'Catat nomor darurat' (D-051) > 112 belum diluncurkan + BPBD bernomor → BPBD lebih dulu, 112 tetap disebut beserta statusnya
+  ✓ nomorDaruratWilayah (D-050, D-051) > isi butir Checklist Siaga 'Catat nomor darurat' (D-051) > 112 belum diluncurkan tanpa BPBD bernomor → nomor nasional, BPBD tanpa nomor tidak disebut
+  ✓ sumber nomor darurat nasional (D-051) > setiap nomor nasional tercantum di minimal satu sumber resmi *.go.id yang bertanggal
+  ✓ sumber nomor darurat nasional (D-051) > Buku Saku hal. 82 → halaman PDF 84
+
+tests/unit/zona-waktu.test.ts  (5/5 lulus)
+  ✓ zona waktu per provinsi (D-060) > WIB: Sumatra, Jawa, Kalimantan Barat & Tengah; kode tingkat apa pun
+  ✓ zona waktu per provinsi (D-060) > WITA: Bali, Nusa Tenggara, Kalimantan Selatan/Timur/Utara, Sulawesi
+  ✓ zona waktu per provinsi (D-060) > WIT: Maluku, Maluku Utara, semua provinsi Papua
+  ✓ zona waktu per provinsi (D-060) > tanpa wilayah → WIB
+  ✓ zona waktu per provinsi (D-060) > jam dan tanggal diformat di zona wilayah
+
+Total: 187 kasus, 187 lulus (Asia/Jakarta), 187 lulus (UTC)
+
+Uji bug yang ditanam (mutation testing):
+  TERDETEKSI: Batas ambang: nilai tepat di batas ikut level bawah (>= jadi >) [src/server/services/risk.service.ts]
+      test gagal: hitungLevelRisiko > nilai tepat di batas ambang masuk ke level atas (min ≤ nilai < maks)
+  TERDETEKSI: Anti-spam: level yang sama dikirim ulang (> jadi >=) [src/server/services/notification.service.ts]
+      test gagal: anti-spam perluKirim > tidak kirim ulang level yang sama
+  TERDETEKSI: CSRF: permintaan tanpa Host tetap diizinkan [src/server/asal.ts]
+      test gagal: asalSama > ada Origin tetapi tidak ada Host -> ditolak
+  TERDETEKSI: Cron: secret pendek (< 16 karakter) diterima [src/server/cron.ts]
+      test gagal: otorisasiCron > menolak semua permintaan jika CRON_SECRET kosong atau terlalu pendek
+
+Cakupan kode Modul Risiko (perkiraan, coverage bawaan V8, unit test saja):
+  src/server/services/risk.service.ts  68.7% baris (68/99), 8/11 fungsi
+      belum tercakup: ambilAmbangWilayah, simulasiAktif, evaluasiDanSimpanRisiko (akses database)
+  src/lib/mesin-risiko.ts              92.3% baris (72/78), 7/7 fungsi

@@ -1,0 +1,30 @@
+# Unit test otomatis setiap push dan Pull Request ke main.
+# Integration test dan E2E butuh database ter-seed, build produksi, dan internet
+# (Open-Meteo), jadi tetap dijalankan lokal sebelum rilis (lihat README, Penerapan Testing).
+name: Unit test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # postinstall menjalankan `prisma generate` (tidak butuh koneksi database).
+      - name: Pasang dependensi
+        run: npm ci
+
+      - name: Unit test (Vitest)
+        run: npm test
