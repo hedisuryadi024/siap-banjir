@@ -830,7 +830,7 @@ Gambar 9 memperlihatkan halaman Risiko, Cuaca, Nomor Darurat, dan Pengaturan yan
 
 Seluruh layar dirancang di Figma dalam dua ukuran: **mobile (390 × 844)** dan **desktop (1440 × 900)**, masing-masing 11 layar. Prototipe interaktifnya bisa dicoba di **[Figma: Siap Banjir](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2)** (mode Play). Klik gambar di bawah untuk membuka layar tersebut di Figma.
 
-**Mobile**
+**Mobile (390 × 844)**
 
 <table>
 <tr>
@@ -852,36 +852,19 @@ Seluruh layar dirancang di Figma dalam dua ukuran: **mobile (390 × 844)** dan *
 </tr>
 </table>
 
-<details>
-<summary><b>Desktop</b> (klik untuk membuka)</summary>
+**Desktop (1440 × 900)**: 11 layar dengan isi yang sama, dalam tata letak lebar. Klik untuk membuka di Figma:
 
-<table>
-<tr>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2394"><img src="docs/images/figma/desktop-beranda-rendah.png" alt="Beranda · Risiko Rendah (desktop)" width="400" /></a><br/><sub>Beranda · Risiko Rendah</sub></td>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2534"><img src="docs/images/figma/desktop-beranda-sedang.png" alt="Beranda · Risiko Sedang (desktop)" width="400" /></a><br/><sub>Beranda · Risiko Sedang</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2674"><img src="docs/images/figma/desktop-beranda-tinggi.png" alt="Beranda · Risiko Tinggi (desktop)" width="400" /></a><br/><sub>Beranda · Risiko Tinggi</sub></td>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2814"><img src="docs/images/figma/desktop-beranda-ubah-wilayah.png" alt="Beranda · Ubah wilayah (desktop)" width="400" /></a><br/><sub>Beranda · Ubah wilayah</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3008"><img src="docs/images/figma/desktop-risiko.png" alt="Risiko (desktop)" width="400" /></a><br/><sub>Risiko</sub></td>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3702"><img src="docs/images/figma/desktop-cuaca.png" alt="Cuaca (desktop)" width="400" /></a><br/><sub>Cuaca</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3926"><img src="docs/images/figma/desktop-informasi.png" alt="Informasi (desktop)" width="400" /></a><br/><sub>Informasi</sub></td>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-4071"><img src="docs/images/figma/desktop-pengaturan.png" alt="Pengaturan (desktop)" width="400" /></a><br/><sub>Pengaturan</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3204"><img src="docs/images/figma/desktop-darurat-112.png" alt="Nomor Darurat · Wilayah dengan 112 (desktop)" width="400" /></a><br/><sub>Nomor Darurat · Wilayah dengan 112</sub></td>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3363"><img src="docs/images/figma/desktop-darurat-tanpa-112.png" alt="Nomor Darurat · Wilayah tanpa 112 (desktop)" width="400" /></a><br/><sub>Nomor Darurat · Wilayah tanpa 112</sub></td>
-</tr>
-<tr>
-<td align="center" valign="top"><a href="https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3529"><img src="docs/images/figma/desktop-darurat-konfirmasi.png" alt="Nomor Darurat · Konfirmasi panggilan (desktop)" width="400" /></a><br/><sub>Nomor Darurat · Konfirmasi panggilan</sub></td>
-</tr>
-</table>
-
-</details>
+- [Beranda · Risiko Rendah](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2394)
+- [Beranda · Risiko Sedang](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2534)
+- [Beranda · Risiko Tinggi](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2674)
+- [Beranda · Ubah wilayah](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-2814)
+- [Risiko](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3008)
+- [Cuaca](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3702)
+- [Informasi](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3926)
+- [Pengaturan](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-4071)
+- [Nomor Darurat · Wilayah dengan 112](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3204)
+- [Nomor Darurat · Wilayah tanpa 112](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3363)
+- [Nomor Darurat · Konfirmasi panggilan](https://www.figma.com/design/bkBKZCy4FbOM77oCTr9Bu6/Siap-Banjir?node-id=1-3529)
 
 ### 5. Menjalankan Prototipe
 
