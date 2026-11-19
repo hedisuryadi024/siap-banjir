@@ -28,7 +28,10 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // Geolokasi hanya untuk fitur "Gunakan lokasi saya" di situs sendiri.
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), usb=(), geolocation=(self)" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), payment=(), usb=(), geolocation=(self)",
+  },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
@@ -56,14 +59,25 @@ const configDasar: NextConfig = {
         // Service worker harus selalu versi terbaru.
         source: "/sw.js",
         headers: [
-          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
-          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
           { key: "Service-Worker-Allowed", value: "/" },
         ],
       },
       {
         source: "/manifest.json",
-        headers: [{ key: "Content-Type", value: "application/manifest+json; charset=utf-8" }],
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/manifest+json; charset=utf-8",
+          },
+        ],
       },
     ];
   },
