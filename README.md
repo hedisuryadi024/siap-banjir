@@ -13,6 +13,8 @@ Aplikasi web untuk memantau risiko banjir dan memberi peringatan dini berdasarka
 
 Keputusan desain dan penyimpangan dari rancangan dicatat di [docs/DECISIONS.md](docs/DECISIONS.md).
 
+> **Coba langsung:** [https://siap-banjir-mlmj.vercel.app](https://siap-banjir-mlmj.vercel.app). Berjalan di Vercel (paket Hobby) dengan database Neon dan update cuaca tiap 30 menit dari cron-job.org (lihat [Deployment saat ini](#deployment-saat-ini)). Karena memakai paket gratis, pembukaan pertama setelah lama tidak diakses bisa beberapa detik lebih lambat.
+
 ## Anggota Kelompok
 
 | Nama | NIM |
@@ -43,6 +45,7 @@ README ini terdiri atas dua bagian: **Bagian A** untuk menjalankan dan mengemban
 - [Deploy ke Vercel + Neon / Supabase](#deploy-ke-vercel--neon--supabase)
 - [Keamanan](#keamanan)
 - [Script npm](#script-npm)
+- [Mengirim perubahan (Pull Request)](#mengirim-perubahan-pull-request)
 
 **[Bagian B: Dokumen Requirements & Perancangan](#bagian-b-dokumen-requirements--perancangan)**
 
@@ -211,7 +214,8 @@ Notifikasi push dan PWA hanya bekerja di `localhost` atau HTTPS. Di iPhone/iPad,
 | Cara | Konfigurasi |
 |---|---|
 | **Lokal** | `npm run cron:lokal` di terminal kedua (memanggil sekarang lalu tiap 30 menit) |
-| **Vercel Cron** | `vercel.json` sudah berisi jadwal `*/30 * * * *`. Vercel otomatis mengirim `Authorization: Bearer $CRON_SECRET` jika env `CRON_SECRET` diatur. **Paket Hobby hanya mengizinkan cron harian**; untuk 30 menit perlu Pro atau GitHub Actions |
+| **Vercel Cron** | `vercel.json` berisi jadwal harian `0 0 * * *`, karena **paket Hobby hanya mengizinkan cron sekali sehari** dan jadwal yang lebih sering membuat deploy gagal. Vercel otomatis mengirim `Authorization: Bearer $CRON_SECRET` jika env `CRON_SECRET` diatur. Untuk tiap 30 menit di Vercel perlu paket Pro (`*/30 * * * *`) |
+| **cron-job.org** | Dipakai di [deployment saat ini](#deployment-saat-ini). Buat cronjob gratis ke `https://<domain>/api/cron/update-weather`, jadwal *Every 30 minutes*, lalu di tab **Advanced → Headers** tambahkan `Authorization` = `Bearer <CRON_SECRET>`. Cek dengan **Test run** (harus `200 OK`) |
 | **GitHub Actions** | `.github/workflows/update-weather.yml`. Atur secret repo `APP_URL` (misal `https://siap-banjir.vercel.app`) dan `CRON_SECRET`. Jadwal GitHub bisa terlambat beberapa menit |
 
 Panggil manual:
@@ -273,22 +277,37 @@ Ambang khusus wilayah: tambahkan entri `ambangSeed` dengan `idWilayah` berupa ko
    - **Neon:** buat project, lalu ambil dua connection string:
      - `DATABASE_URL` = URL *pooled* (host berakhiran `-pooler`), tambahkan `?sslmode=require&pgbouncer=true`
      - `DIRECT_URL` = URL langsung (tanpa `-pooler`), `?sslmode=require`
+     - Neon sekarang menambahkan `&channel_binding=require` pada alamat yang disalin; parameter ini boleh dibiarkan. Pilih region **Singapore** agar dekat dengan pengguna.
    - **Supabase:** Project Settings → Database:
      - `DATABASE_URL` = *Transaction pooler* (port 6543) + `?pgbouncer=true&connection_limit=1`
      - `DIRECT_URL` = *Session pooler* / direct (port 5432)
 2. **Vercel:** import repo, framework Next.js.
    - **Build Command:** `npm run vercel-build` (generate Prisma Client, `prisma migrate deploy`, lalu `next build`).
-   - **Environment Variables:** semua variabel di atas. `NEXT_PUBLIC_APP_URL` = domain produksi.
-3. **Seed sekali** dari komputer lokal, menunjuk ke database produksi:
+   - **Environment Variables:** semua variabel di atas. `NEXT_PUBLIC_APP_URL` = domain produksi. `VAPID_SUBJECT` harus berisi email asli, bukan `mailto:admin@example.com` dari `.env.example`.
+   - **Function Region** (disarankan): **Settings → Functions → Function Regions**, pilih **Singapore (sin1)** agar sama dengan region database, lalu Redeploy. Region bawaan Vercel adalah Washington, D.C. (`iad1`), sehingga setiap query ke database di Singapura harus melintasi Samudra Pasifik.
+3. **Seed sekali** dari komputer lokal, menunjuk ke database produksi (pakai `DIRECT_URL`, tanpa `-pooler`). Tanpa langkah ini situs tetap terbuka, tetapi daftar provinsi kosong dan `/api/wilayah` membalas `{"data":[]}`:
    ```powershell
    $env:DATABASE_URL = "<DIRECT_URL produksi>"; $env:DIRECT_URL = $env:DATABASE_URL
    npm run db:seed
    $env:DATABASE_URL = $null; $env:DIRECT_URL = $null
    ```
-4. **Cron:** Vercel Cron (Pro) atau GitHub Actions (lihat [Cron](#cron-update-cuaca-otomatis)).
+   Seed berhasil bila keluar baris `Wilayah: 91599 disimpan, ...` dan `Konten: ...`. Daftar wilayah disimpan browser sampai 1 jam (`Cache-Control: max-age=3600`), jadi bila daftar masih kosong setelah seed, buka situs di jendela Incognito.
+4. **Cron:** cron-job.org (gratis), Vercel Cron (Pro), atau GitHub Actions (lihat [Cron](#cron-update-cuaca-otomatis)).
 5. **Cek:** buka situs → pilih wilayah → aktifkan notifikasi → Pengaturan → Kirim notifikasi uji.
 
 Catatan: rate limit memakai memori proses, sehingga di Vercel batasnya berlaku per instance (DECISIONS D-019).
+
+### Deployment saat ini
+
+| Komponen | Layanan | Keterangan |
+|---|---|---|
+| Aplikasi | Vercel, paket Hobby | [https://siap-banjir-mlmj.vercel.app](https://siap-banjir-mlmj.vercel.app), di-deploy dari fork `hedisuryadi024/siap-banjir` |
+| Database | Neon, paket gratis | PostgreSQL 17, region AWS Asia Pacific (Singapore) |
+| Update cuaca | cron-job.org | Tiap 30 menit ke `/api/cron/update-weather` dengan header `Authorization: Bearer <CRON_SECRET>` |
+
+Aplikasi Vercel hanya bisa membaca repo dari akun GitHub yang memasangnya, sedangkan repo utama milik akun `narafathira-star`. Karena itu deployment memakai fork di akun anggota. Untuk memperbarui situs setelah PR di-merge ke repo utama: buka fork di GitHub → **Sync fork → Update branch**, lalu Vercel deploy ulang otomatis. Jalankan ulang `npm run db:seed` ke Neon hanya bila `prisma/seed-data.ts` atau data wilayah berubah.
+
+Nilai rahasia (connection string Neon, `CRON_SECRET`, kunci VAPID, `DATA_ENCRYPTION_KEY`) hanya disimpan di **Vercel → Settings → Environment Variables** dan di `.env` laptop pengelola. Jangan ganti `DATA_ENCRYPTION_KEY` setelah ada pelanggan, karena langganan yang sudah terenkripsi tidak bisa dibaca lagi.
 
 ## Keamanan
 
@@ -320,6 +339,17 @@ Catatan: rate limit memakai memori proses, sehingga di Vercel batasnya berlaku p
 | `npm run db:studio` | Prisma Studio |
 | `npm run data:wilayah` | Impor ulang data wilayah dari sumber (lihat [Data wilayah](#data-wilayah-indonesia)) |
 | `npm run cek:sumber` | Pastikan semua tautan sumber riwayat bisa dibuka (butuh internet) |
+
+
+## Mengirim perubahan (Pull Request)
+
+Perubahan tidak di-push langsung ke `main`, tetapi dikirim lewat Pull Request agar diperiksa anggota lain lebih dulu (lihat [Code Review](#10-code-review)):
+
+```powershell
+.\scripts\kirim-pr.ps1 -Judul "Ringkasan perubahan"
+```
+
+Skrip ini membuat branch fitur, menampilkan berkas yang akan dikirim untuk dikonfirmasi, lalu membuka halaman Pull Request di browser. Di halaman itu, pilih reviewer lalu klik **Create pull request**. Untuk mengirim perbaikan hasil review, jalankan perintah yang sama dari branch tersebut. Setelah PR di-merge: `git switch main; git pull`.
 
 ---
 
@@ -1752,6 +1782,18 @@ Kriteria rilis yang diusulkan disajikan pada Tabel 22.
 | 4 | Endpoint kesehatan, header keamanan, dan penolakan cron tanpa secret berfungsi di server produksi | `curl` ke `/api/health` dan `/api/cron/update-weather` |
 | 5 | Notifikasi uji diterima di Android (Chrome) dan iPhone (website ditambahkan ke Layar Utama) | Pengaturan → Kirim notifikasi uji |
 
+**Hasil di lingkungan nyata (20 November 2026).** Setelah aplikasi di-deploy ke Vercel dengan database Neon (lihat [Deployment saat ini](#deployment-saat-ini)), pemeriksaan berikut dilakukan pada situs publik:
+
+- Endpoint cron yang dibuka langsung di browser, tanpa header `Authorization`, membalas `{"error":"Tidak diizinkan"}`. Endpoint terlindungi dari pemanggilan sembarangan (kriteria 4).
+- *Test run* dari cron-job.org dengan header `Authorization: Bearer <CRON_SECRET>` membalas `200 OK` dalam 7,82 detik (panggilan pertama, termasuk waktu bangun server dan database). Respons membawa header keamanan `Content-Security-Policy`, `Permissions-Policy`, `Strict-Transport-Security`, `Cross-Origin-Opener-Policy`, dan `Referrer-Policy` (kriteria 4).
+- Daftar provinsi dan tombol **Gunakan lokasi saya** berfungsi setelah seed.
+- Notifikasi uji diterima di HP. Pengujian di iPhone belum dilakukan (kriteria 5 sebagian).
+
+Dua temuan selama deploy, sesuai catatan materi bahwa masalah sering baru muncul di lingkungan operasional:
+
+1. **Jadwal cron ditolak paket Hobby.** Jadwal `*/30 * * * *` di `vercel.json` membuat deploy gagal karena paket gratis Vercel hanya mengizinkan cron harian. Jadwal diubah menjadi `0 0 * * *`, dan update tiap 30 menit dipindahkan ke cron-job.org.
+2. **Daftar wilayah kosong setelah deploy.** Migrasi membuat tabel, tetapi tidak mengisi data. `/api/wilayah` membalas `{"data":[]}` sampai `npm run db:seed` dijalankan ke database Neon. Langkah ini kini ditegaskan di [panduan deploy](#deploy-ke-vercel--neon--supabase).
+
 ### 8. Security Testing Berbasis Risiko
 
 Materi menyarankan pendekatan berbasis risiko: tentukan risiko keamanan, analisis bagaimana risiko itu bisa terjadi, lalu rancang test untuk membuktikan sistem terlindungi. Tabel 23 memetakan contoh risiko pada Tabel 9.11 ke SiapBanjir.
@@ -1785,23 +1827,36 @@ Contoh penerapan TDD untuk pengembangan berikutnya, misalnya menambah parameter 
 
 ### 10. Code Review
 
-Materi menempatkan code review sebagai pelengkap testing (Tabel 9.12). Riwayat git saat ini menunjukkan perubahan langsung di-push ke branch `main` lewat `push.ps1` tanpa tahap review, dan pernah terjadi konflik yang harus diselesaikan manual pada `next.config.ts`. Alur yang diusulkan memakai Pull Request di GitHub:
+Materi menempatkan code review sebagai pelengkap testing (Tabel 9.12). Sampai 19 November 2026, semua perubahan langsung di-push ke branch `main` tanpa tahap review. Akibatnya, pernah terjadi konflik pada `next.config.ts` yang harus diselesaikan manual, karena dua anggota mengubah berkas yang sama tanpa saling tahu. Sejak itu, perubahan dikirim lewat Pull Request (PR) di GitHub dengan bantuan tiga hal berikut.
 
-1. **Setup review.** Programmer membuat branch fitur dan membuka Pull Request, lalu menunjuk satu anggota lain sebagai reviewer.
-2. **Prepare and distribute.** Deskripsi Pull Request menjelaskan tujuan perubahan, user story atau FR yang terkait, dan test yang ditambahkan.
-3. **Check code.** Reviewer memeriksa kode dan test memakai checklist di bawah. GitHub Actions menjalankan unit test secara otomatis.
-4. **Write report and discussion.** Temuan ditulis sebagai komentar pada baris kode dan didiskusikan di Pull Request.
-5. **To-do list and code changes.** Programmer memperbaiki kode, lalu reviewer menyetujui dan Pull Request di-merge.
+- **`scripts/kirim-pr.ps1`** membuat branch fitur, menampilkan daftar berkas yang akan dikirim untuk dikonfirmasi, melakukan commit dan push, lalu membuka halaman pembuatan PR di browser.
+- **`.github/pull_request_template.md`** otomatis mengisi deskripsi PR dengan ringkasan, kebutuhan terkait, test yang dijalankan, dan checklist reviewer.
+- **Branch protection** pada `main` mewajibkan PR, persetujuan satu anggota lain, dan unit test yang lulus di GitHub Actions sebelum PR bisa di-merge.
 
-Checklist review untuk TypeScript/Next.js, disesuaikan dari Tabel 9.13:
+Alur review mengikuti tahapan pada Tabel 9.12:
+
+1. **Setup review.** Programmer menjalankan `.\scripts\kirim-pr.ps1 -Judul "..."`, lalu memilih satu anggota lain sebagai reviewer di halaman PR.
+2. **Prepare and distribute.** Template PR diisi dengan tujuan perubahan, user story atau FR yang terkait, dan hasil test.
+3. **Check code.** Reviewer membaca perubahan di tab *Files changed* dan memakai checklist pada template. Bersamaan dengan itu, GitHub Actions menjalankan unit test pada PR tersebut.
+4. **Write report and discussion.** Temuan ditulis sebagai komentar pada baris kode dan didiskusikan di PR.
+5. **To-do list and code changes.** Programmer memperbaiki kode di branch yang sama, lalu menjalankan skrip yang sama sekali lagi, dan PR ikut ter-update. Setelah reviewer memilih *Approve* dan test hijau, PR di-merge ke `main`.
+
+Checklist reviewer pada template, disesuaikan dari Tabel 9.13 untuk TypeScript/Next.js:
 
 - [ ] Nama variabel dan fungsi bermakna dan konsisten dengan istilah di dokumen ini (wilayah, ambang, langganan).
 - [ ] Data salah sudah dipertimbangkan dan diuji: masukan kosong, `null`, nilai batas, format kode wilayah salah.
 - [ ] Semua galat ditangani, terutama pemanggilan Open-Meteo, push service, dan basis data.
 - [ ] Masukan API divalidasi dengan skema Zod.
-- [ ] Tidak memakai `any` tanpa alasan, dan `npm run typecheck` lulus.
-- [ ] Tidak ada rahasia di kode, dan variabel `NEXT_PUBLIC_*` tidak berisi kunci privat.
+- [ ] Tidak memakai `any` tanpa alasan.
+- [ ] Tidak ada rahasia di kode, variabel `NEXT_PUBLIC_*` tidak berisi kunci privat, dan `.env` tidak ikut terkirim.
 - [ ] Perubahan logika risiko atau notifikasi disertai unit test baru.
+- [ ] README atau `docs/` ikut diperbarui bila perilaku atau konfigurasi berubah.
+
+**Mengaktifkan branch protection** (dilakukan sekali oleh pemilik repo): buka **Settings → Rules → Rulesets → New ruleset → New branch ruleset**, beri nama `Lindungi main`, ubah *Enforcement status* menjadi **Active**, lalu pada *Target branches* pilih **Include default branch**. Centang aturan berikut, lalu klik **Create**:
+
+- **Require a pull request before merging**, dengan *Required approvals* = 1
+- **Require status checks to pass**, lalu tambahkan check `unit-test`
+- **Block force pushes**
 
 ### 11. Otomatisasi di GitHub Actions
 
